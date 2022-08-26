@@ -4,7 +4,7 @@ use druid::{
     AppDelegate, AppLauncher, Command, Env, Event, LocalizedString, Point, Size,
     Widget, WidgetExt, WindowDesc, WindowHandle, WindowId, WindowState,
 };
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "freebsd", target_os = "openbsd"))]
 use druid::{Menu, MenuItem, SysMods};
 use lapce_data::{
     command::{LapceUICommand, LAPCE_UI_COMMAND},
@@ -139,6 +139,22 @@ where
 
     if let Some(icon) = window_icon() {
         desc = desc.with_window_icon(icon);
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))]
+    {
+        desc = desc.menu(|_, _, _| {
+            Menu::new("Lapce").entry(
+                Menu::new("")
+                    .entry(MenuItem::new("About Lapce"))
+                    .separator()
+                    .entry(
+                        MenuItem::new("Quit Lapce")
+                            .command(druid::commands::QUIT_APP)
+                            .hotkey(SysMods::Cmd, "q")
+                    )
+            )
+        });
     }
 
     #[cfg(target_os = "macos")]
