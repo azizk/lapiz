@@ -1,11 +1,11 @@
 <h1 align="center">
   <a href="https://lapce.dev" target="_blank">
   <img src="extra/images/logo.png" width=200 height=200/><br>
-  Lapce
+  Lapiz
   </a>
 </h1>
 
-<h4 align="center">Lightning-fast And Powerful Code Editor</h4>
+<p align="center"><strong>L</strong>ightning-Fast, <strong>A</strong>wesome, <strong>P</strong>owerful, <strong>I</strong>ngenious, <strong>Z</strong>appy Code Editor</p>
 
 <div align="center">
   <a href="https://github.com/lapce/lapce/actions/workflows/ci.yml" target="_blank">
@@ -23,6 +23,7 @@
 </div>
 <br/>
 
+> **!** **Note:** Lapiz (IPA: /laˈpis/) is a fork created from [Lapce](https://github.com/lapce/lapce), for maintaining my own customizations and adaptions, but also to contribute fixes and features back to the original project. **!**
 
 Lapce (IPA: /læps/) is written in pure Rust with a UI in [Floem](https://github.com/lapce/floem). It is designed with [Rope Science](https://xi-editor.io/docs/rope_science_00.html) from the [Xi-Editor](https://github.com/xi-editor/xi-editor) which makes for lightning-fast computation, and leverages [Wgpu](https://github.com/gfx-rs/wgpu) for rendering. More information about the features of Lapce can be found on the [main website](https://lapce.dev) and user documentation can be found on [GitBook](https://docs.lapce.dev/).
 
