@@ -4,9 +4,9 @@
 key = "F1"
 command = "palette.command"
 
-# [[keymaps]]
-# key = "ctrl+q"
-# command = "quit"
+[[keymaps]]
+key = "ctrl+q"
+command = "quit"
 
 # --------------------------------- Basic editing ---------------------------------------
 
