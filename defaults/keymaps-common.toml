@@ -61,6 +61,14 @@ command = "scroll_up"
 key = "Ctrl+PageDown"
 command = "scroll_down"
 
+[[keymaps]]
+key = "Ctrl+Up"
+command = "scroll_up"
+
+[[keymaps]]
+key = "Ctrl+Down"
+command = "scroll_down"
+
 # ------------------------------------ Multi cursor -------------------------------------
 
 [[keymaps]]
