@@ -119,6 +119,7 @@ impl EditorTabInfo {
                     )
                 })
                 .collect(),
+            history: (0..self.children.len()).collect(),
             layout_rect: Rc::new(RefCell::new(Rect::ZERO)),
             content_is_hot: Rc::new(RefCell::new(false)),
         };

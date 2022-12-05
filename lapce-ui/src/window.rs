@@ -459,38 +459,31 @@ impl Widget<LapceWindowData> for LapceWindow {
                         let _ = data.db.save_tabs_async(data);
                         return;
                     }
-                    LapceUICommand::NextTab => {
-                        let new_index = if data.active >= self.tabs.len() - 1 {
-                            0
-                        } else {
-                            data.active + 1
+                    LapceUICommand::NextTab | LapceUICommand::PreviousTab => {
+                        let new_index = match command {
+                            LapceUICommand::NextTab => {
+                                if data.active >= self.tabs.len() - 1 {
+                                    0
+                                } else {
+                                    data.active + 1
+                                }
+                            }
+                            _ => {
+                                if data.active == 0 {
+                                    self.tabs.len() - 1
+                                } else {
+                                    data.active - 1
+                                }
+                            }
                         };
+
                         let _ = data.db.save_workspace_async(
                             data.tabs.get(&data.active_id).unwrap(),
                         );
                         data.active = new_index;
                         data.active_id = Arc::new(self.tabs[new_index].id());
                         let _ = data.db.save_tabs_async(data);
-                        ctx.submit_command(Command::new(
-                            LAPCE_UI_COMMAND,
-                            LapceUICommand::Focus,
-                            Target::Widget(*data.active_id),
-                        ));
-                        ctx.request_layout();
-                        ctx.set_handled();
-                    }
-                    LapceUICommand::PreviousTab => {
-                        let new_index = if data.active == 0 {
-                            self.tabs.len() - 1
-                        } else {
-                            data.active - 1
-                        };
-                        let _ = data.db.save_workspace_async(
-                            data.tabs.get(&data.active_id).unwrap(),
-                        );
-                        data.active = new_index;
-                        data.active_id = Arc::new(self.tabs[new_index].id());
-                        let _ = data.db.save_tabs_async(data);
+
                         ctx.submit_command(Command::new(
                             LAPCE_UI_COMMAND,
                             LapceUICommand::Focus,
