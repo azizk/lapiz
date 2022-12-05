@@ -495,6 +495,10 @@ pub struct EditorConfig {
         desc = "Scroll speed modifier. The scroll delta will be multiplied by whatever the value is povided here. Defaults to 1."
     )]
     pub scroll_speed_modifier: f64,
+    #[field_names(
+        desc = "If enabled tabs are cycled through by most recently viewed order."
+    )]
+    pub historic_next_tab: bool,
 }
 
 impl EditorConfig {
