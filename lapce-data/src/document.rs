@@ -3059,24 +3059,18 @@ impl Document {
         };
 
         let mut find = self.find.borrow_mut();
+
         if let Some((search_range_start, search_range_end)) = search_range {
-            if !find.is_multiline_regex() {
+            if !find.is_multiline_regex()
+               // only execute multi-line regex queries if we are searching the entire text (last step)
+               || search_range_start == 0 && search_range_end == self.buffer.len()
+            {
                 find.update_find(
                     self.buffer.text(),
                     search_range_start,
                     search_range_end,
                     true,
                 );
-            } else {
-                // only execute multi-line regex queries if we are searching the entire text (last step)
-                if search_range_start == 0 && search_range_end == self.buffer.len() {
-                    find.update_find(
-                        self.buffer.text(),
-                        search_range_start,
-                        search_range_end,
-                        true,
-                    );
-                }
             }
         }
     }
