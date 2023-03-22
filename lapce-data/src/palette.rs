@@ -39,7 +39,7 @@ use crate::{
     db::LapceDb,
     document::BufferContent,
     editor::EditorLocation,
-    find::Find,
+    find::Finder,
     keypress::{KeyMap, KeyPressData, KeyPressFocus},
     list::ListData,
     panel::PanelKind,
@@ -323,7 +323,7 @@ pub struct PaletteViewLens;
 #[derive(Clone, Data)]
 pub struct PaletteViewData {
     pub palette: Arc<PaletteData>,
-    pub find: Arc<Find>,
+    pub finder: Arc<Finder>,
     pub workspace: Arc<LapceWorkspace>,
     pub main_split: LapceMainSplitData,
     pub keypress: Arc<KeyPressData>,
@@ -355,7 +355,7 @@ impl Lens<LapceTabData, PaletteViewData> for PaletteViewLens {
         data.workspace = palette_view.workspace.clone();
         data.keypress = palette_view.keypress.clone();
         data.main_split = palette_view.main_split.clone();
-        data.find = palette_view.find;
+        data.finder = palette_view.finder;
         result
     }
 }
@@ -776,7 +776,7 @@ impl PaletteViewData {
     pub fn select(&mut self, ctx: &mut EventCtx) {
         if self.palette.palette_type == PaletteType::Line {
             let pattern = self.palette.get_input().to_string();
-            let find = Arc::make_mut(&mut self.find);
+            let find = Arc::make_mut(&mut self.finder);
             find.visual = true;
             find.set_find(&pattern, false, false);
             ctx.submit_command(Command::new(

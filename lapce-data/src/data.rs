@@ -64,7 +64,7 @@ use crate::{
     document::{BufferContent, Document, LocalBufferKind},
     editor::{EditorLocation, EditorPosition, LapceEditorBufferData, Line, TabRect},
     explorer::FileExplorerData,
-    find::Find,
+    find::Finder,
     hover::HoverData,
     images::ImageCache,
     keypress::KeyPressData,
@@ -687,7 +687,7 @@ pub struct LapceTabData {
     pub rename: Arc<RenameData>,
     pub terminal: Arc<TerminalPanelData>,
     pub palette: Arc<PaletteData>,
-    pub find: Arc<Find>,
+    pub finder: Arc<Finder>,
     pub source_control: Arc<SourceControlData>,
     pub problem: Arc<ProblemData>,
     pub search: Arc<SearchData>,
@@ -918,7 +918,7 @@ impl LapceTabData {
             plugin,
             problem,
             search,
-            find: Arc::new(Find::new(0)),
+            finder: Arc::new(Finder::new(0)),
             picker: file_picker,
             source_control,
             file_explorer,
@@ -1030,7 +1030,7 @@ impl LapceTabData {
             focus_area: self.focus_area.clone(),
             source_control: self.source_control.clone(),
             proxy: self.proxy.clone(),
-            find: self.find.clone(),
+            finder: self.finder.clone(),
             doc,
             palette: self.palette.clone(),
             editor: editor.clone(),
@@ -1103,7 +1103,7 @@ impl LapceTabData {
         self.hover = editor_buffer_data.hover.clone();
         self.rename = editor_buffer_data.rename.clone();
         self.main_split = editor_buffer_data.main_split.clone();
-        self.find = editor_buffer_data.find.clone();
+        self.finder = editor_buffer_data.finder.clone();
         if !editor_buffer_data.editor.same(editor) {
             self.main_split
                 .editors
@@ -1339,7 +1339,7 @@ impl LapceTabData {
             main_split: self.main_split.clone(),
             keypress: self.keypress.clone(),
             config: self.config.clone(),
-            find: self.find.clone(),
+            finder: self.finder.clone(),
             db: self.db.clone(),
             focus_area: self.focus_area.clone(),
             terminal: self.terminal.clone(),

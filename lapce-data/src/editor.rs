@@ -49,7 +49,7 @@ use crate::{
         LapceEditorData, LapceMainSplitData, SplitContent,
     },
     document::{BufferContent, Document, LocalBufferKind},
-    find::Find,
+    find::Finder,
     hover::{HoverData, HoverStatus},
     keypress::{KeyMap, KeyPressFocus},
     palette::PaletteData,
@@ -219,7 +219,7 @@ pub struct LapceEditorBufferData {
     pub focus_area: FocusArea,
     pub source_control: Arc<SourceControlData>,
     pub palette: Arc<PaletteData>,
-    pub find: Arc<Find>,
+    pub finder: Arc<Finder>,
     pub proxy: Arc<LapceProxy>,
     pub command_keymaps: Arc<IndexMap<String, Vec<KeyMap>>>,
     pub config: Arc<LapceConfig>,
@@ -1714,7 +1714,7 @@ impl LapceEditorBufferData {
                 self.main_split.editor_close(ctx, self.view_id, true);
             }
             SearchWholeWordForward => {
-                Arc::make_mut(&mut self.find).visual = true;
+                Arc::make_mut(&mut self.finder).visual = true;
                 let offset = self.editor.cursor.offset();
                 let (start, end) = self.doc.buffer().select_word(offset);
                 let word = self.doc.buffer().slice_to_cow(start..end).to_string();
@@ -1724,9 +1724,9 @@ impl LapceEditorBufferData {
                     Target::Widget(*self.main_split.tab_id),
                 ));
 
-                Arc::make_mut(&mut self.find).set_find(&word, false, true);
+                Arc::make_mut(&mut self.finder).set_find(&word, false, true);
                 let next =
-                    self.find
+                    self.finder
                         .next(self.doc.buffer().text(), offset, false, true);
                 if let Some((start, _end)) = next {
                     self.run_move_command(
@@ -1752,9 +1752,9 @@ impl LapceEditorBufferData {
                         ));
                     }
                 } else {
-                    Arc::make_mut(&mut self.find).visual = true;
+                    Arc::make_mut(&mut self.finder).visual = true;
                     let offset = self.editor.cursor.offset();
-                    let next = self.find.next(
+                    let next = self.finder.next(
                         self.doc.buffer().text(),
                         offset,
                         false,
@@ -1785,10 +1785,14 @@ impl LapceEditorBufferData {
                         ));
                     }
                 } else {
-                    Arc::make_mut(&mut self.find).visual = true;
+                    Arc::make_mut(&mut self.finder).visual = true;
                     let offset = self.editor.cursor.offset();
-                    let next =
-                        self.find.next(self.doc.buffer().text(), offset, true, true);
+                    let next = self.finder.next(
+                        self.doc.buffer().text(),
+                        offset,
+                        true,
+                        true,
+                    );
                     if let Some((start, _end)) = next {
                         self.run_move_command(
                             ctx,
@@ -1801,7 +1805,7 @@ impl LapceEditorBufferData {
             }
             ToggleCaseSensitive => {
                 let tab_id = *self.main_split.tab_id;
-                let find = Arc::make_mut(&mut self.find);
+                let find = Arc::make_mut(&mut self.finder);
                 let case_sensitive = find.toggle_case_sensitive();
                 let pattern = find.search_string.clone().unwrap_or_default();
                 ctx.submit_command(Command::new(
@@ -1821,7 +1825,7 @@ impl LapceEditorBufferData {
                 ));
             }
             ClearSearch => {
-                Arc::make_mut(&mut self.find).visual = false;
+                Arc::make_mut(&mut self.finder).visual = false;
                 let view_id =
                     if let Some(parent_view_id) = self.editor.parent_view_id {
                         parent_view_id
@@ -1852,7 +1856,7 @@ impl LapceEditorBufferData {
                 let line = self.doc.buffer().line_of_offset(offset);
                 let offset = self.doc.buffer().offset_of_line(line);
                 let next =
-                    self.find
+                    self.finder
                         .next(self.doc.buffer().text(), offset, false, false);
 
                 if let Some(start) = next
@@ -1867,7 +1871,7 @@ impl LapceEditorBufferData {
                     );
                 } else {
                     let start_offset = self.doc.buffer().offset_of_line(start_line);
-                    if let Some((start, _)) = self.find.next(
+                    if let Some((start, _)) = self.finder.next(
                         self.doc.buffer().text(),
                         start_offset,
                         false,
@@ -2357,7 +2361,7 @@ impl LapceEditorBufferData {
                 }
             }
             Search => {
-                Arc::make_mut(&mut self.find).visual = true;
+                Arc::make_mut(&mut self.finder).visual = true;
                 let region = match &self.editor.cursor.mode {
                     lapce_core::cursor::CursorMode::Normal(offset) => {
                         lapce_core::selection::SelRegion::caret(*offset)
@@ -2389,7 +2393,7 @@ impl LapceEditorBufferData {
                         .to_string()
                 };
                 if !pattern.contains('\n') {
-                    Arc::make_mut(&mut self.find).set_find(&pattern, false, false);
+                    Arc::make_mut(&mut self.finder).set_find(&pattern, false, false);
                     ctx.submit_command(Command::new(
                         LAPCE_UI_COMMAND,
                         LapceUICommand::UpdateSearchInput(pattern),
@@ -2640,7 +2644,7 @@ impl KeyPressFocus for LapceEditorBufferData {
                 if self.config.core.modal && !self.editor.cursor.is_normal() {
                     false
                 } else {
-                    self.find.visual
+                    self.finder.visual
                 }
             }
             "search_focus" => {

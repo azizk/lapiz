@@ -191,8 +191,8 @@ impl Widget<LapceTabData> for SearchInput {
         let mut index = None;
         let cursor_offset = buffer.editor.cursor.offset();
 
-        for i in 0..buffer.doc.find.borrow().occurrences().regions().len() {
-            let region = buffer.doc.find.borrow().occurrences().regions()[i];
+        for i in 0..buffer.doc.finder.borrow().occurrences().regions().len() {
+            let region = buffer.doc.finder.borrow().occurrences().regions()[i];
             if region.min() <= cursor_offset && cursor_offset <= region.max() {
                 index = Some(i);
             }
@@ -239,7 +239,7 @@ impl Widget<LapceTabData> for SearchInput {
             .active_editor()
             .map(|editor| {
                 let editor_data = data.editor_view_content(editor.view_id);
-                editor_data.find.case_sensitive()
+                editor_data.finder.case_sensitive()
             })
             .unwrap_or_default();
 

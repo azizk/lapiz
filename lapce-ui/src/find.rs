@@ -197,7 +197,7 @@ impl Widget<LapceTabData> for FindBox {
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &LapceTabData, env: &Env) {
-        if !data.find.visual {
+        if !data.finder.visual {
             return;
         }
 
@@ -232,8 +232,8 @@ impl Widget<LapceTabData> for FindBox {
         let mut index = None;
         let cursor_offset = buffer.editor.cursor.offset();
 
-        for i in 0..buffer.doc.find.borrow().occurrences().regions().len() {
-            let region = buffer.doc.find.borrow().occurrences().regions()[i];
+        for i in 0..buffer.doc.finder.borrow().occurrences().regions().len() {
+            let region = buffer.doc.finder.borrow().occurrences().regions()[i];
             if region.min() <= cursor_offset && cursor_offset <= region.max() {
                 index = Some(i);
             }
@@ -241,16 +241,16 @@ impl Widget<LapceTabData> for FindBox {
 
         let text_layout = ctx
             .text()
-            .new_text_layout(if !buffer.doc.find.borrow().occurrences().is_empty() {
+            .new_text_layout(if !buffer.doc.finder.borrow().occurrences().is_empty() {
                 match index {
                     Some(index) => format!(
                         "{}/{}",
                         index + 1,
-                        buffer.doc.find.borrow().occurrences().len()
+                        buffer.doc.finder.borrow().occurrences().len()
                     ),
                     None => format!(
                         "{} results",
-                        buffer.doc.find.borrow().occurrences().len()
+                        buffer.doc.finder.borrow().occurrences().len()
                     ),
                 }
             } else {
@@ -280,7 +280,7 @@ impl Widget<LapceTabData> for FindBox {
             .active_editor()
             .map(|editor| {
                 let editor_data = data.editor_view_content(editor.view_id);
-                editor_data.find.case_sensitive()
+                editor_data.finder.case_sensitive()
             })
             .unwrap_or_default();
 

@@ -52,7 +52,7 @@ pub struct FindStatus {
 }
 
 #[derive(Clone)]
-pub struct Find {
+pub struct Finder {
     /// Uniquely identifies this search query.
     id: usize,
 
@@ -77,9 +77,9 @@ pub struct Find {
     occurrences: Selection,
 }
 
-impl Find {
-    pub fn new(id: usize) -> Find {
-        Find {
+impl Finder {
+    pub fn new(id: usize) -> Finder {
+        Finder {
             id,
             hls_dirty: true,
             search_string: None,

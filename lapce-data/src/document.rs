@@ -55,7 +55,7 @@ use crate::{
     config::{LapceConfig, LapceTheme},
     data::{EditorDiagnostic, EditorView},
     editor::{EditorLocation, EditorPosition},
-    find::{Find, FindProgress},
+    find::{FindProgress, Finder},
     history::DocumentHistory,
     proxy::LapceProxy,
     selection_range::{SelectionRangeDirection, SyntaxSelectionRanges},
@@ -432,9 +432,9 @@ pub struct Document {
     /// Information about specific ranges that are used to do smarter selections, supplied by an LSP
     pub syntax_selection_range: Option<SyntaxSelectionRanges>,
     /// Information about the selection find.
-    pub selection_find: Rc<RefCell<Find>>,
+    pub selection_find: Rc<RefCell<Finder>>,
     /// Information about the file-specific find box
-    pub find: Rc<RefCell<Find>>,
+    pub finder: Rc<RefCell<Finder>>,
     find_progress: Rc<RefCell<FindProgress>>,
     /// Event sink so that we can submit commands to the event loop
     pub event_sink: ExtEventSink,
@@ -463,7 +463,7 @@ impl Document {
             BufferContent::Scratch(id, _) => *id,
             _ => BufferId::next(),
         };
-        let mut selection_find = Find::new(0);
+        let mut selection_find = Finder::new(0);
         selection_find.case_matching = CaseMatching::Exact;
         Self {
             id,
@@ -488,7 +488,7 @@ impl Document {
             ime_text: None,
             ime_pos: (0, 0, 0),
             selection_find: Rc::new(RefCell::new(selection_find)),
-            find: Rc::new(RefCell::new(Find::new(0))),
+            finder: Rc::new(RefCell::new(Finder::new(0))),
             find_progress: Rc::new(RefCell::new(FindProgress::Ready)),
             event_sink,
             proxy,
@@ -992,7 +992,7 @@ impl Document {
 
     fn on_update(&mut self, edits: Option<SmallVec<[SyntaxEdit; 3]>>) {
         self.clear_code_actions();
-        self.find.borrow_mut().unset();
+        self.finder.borrow_mut().unset();
         *self.find_progress.borrow_mut() = FindProgress::Started;
         self.get_inlay_hints();
         self.clear_style_cache();
@@ -1543,19 +1543,19 @@ impl Document {
                             (first.min(), first.max())
                         };
                         let search_str = self.buffer.slice_to_cow(start..end);
-                        let case_sensitive = self.find.borrow().case_sensitive();
+                        let case_sensitive = self.finder.borrow().case_sensitive();
                         let multicursor_case_sensitive =
                             config.editor.multicursor_case_sensitive;
                         let case_sensitive =
                             multicursor_case_sensitive || case_sensitive;
                         let search_whole_word =
                             config.editor.multicursor_whole_words;
-                        let mut find = Find::new(0);
-                        find.set_case_sensitive(case_sensitive);
-                        find.set_find(&search_str, false, search_whole_word);
+                        let mut finder = Finder::new(0);
+                        finder.set_case_sensitive(case_sensitive);
+                        finder.set_find(&search_str, false, search_whole_word);
                         let mut offset = 0;
                         while let Some((start, end)) =
-                            find.next(self.buffer.text(), offset, false, false)
+                            finder.next(self.buffer.text(), offset, false, false)
                         {
                             offset = end;
                             selection.add_region(SelRegion::new(start, end, None));
@@ -1581,19 +1581,20 @@ impl Document {
                             let r = selection.last_inserted().unwrap();
                             let search_str =
                                 self.buffer.slice_to_cow(r.min()..r.max());
-                            let case_sensitive = self.find.borrow().case_sensitive();
+                            let case_sensitive =
+                                self.finder.borrow().case_sensitive();
                             let case_sensitive =
                                 config.editor.multicursor_case_sensitive
                                     || case_sensitive;
                             let search_whole_word =
                                 config.editor.multicursor_whole_words;
-                            let mut find = Find::new(0);
-                            find.set_case_sensitive(case_sensitive);
-                            find.set_find(&search_str, false, search_whole_word);
+                            let mut finder = Finder::new(0);
+                            finder.set_case_sensitive(case_sensitive);
+                            finder.set_find(&search_str, false, search_whole_word);
                             let mut offset = r.max();
                             let mut seen = HashSet::new();
                             while let Some((start, end)) =
-                                find.next(self.buffer.text(), offset, false, true)
+                                finder.next(self.buffer.text(), offset, false, true)
                             {
                                 if !selection
                                     .regions()
@@ -1628,14 +1629,15 @@ impl Document {
                         } else {
                             let search_str =
                                 self.buffer.slice_to_cow(r.min()..r.max());
-                            let case_sensitive = self.find.borrow().case_sensitive();
-                            let mut find = Find::new(0);
-                            find.set_case_sensitive(case_sensitive);
-                            find.set_find(&search_str, false, false);
+                            let case_sensitive =
+                                self.finder.borrow().case_sensitive();
+                            let mut finder = Finder::new(0);
+                            finder.set_case_sensitive(case_sensitive);
+                            finder.set_find(&search_str, false, false);
                             let mut offset = r.max();
                             let mut seen = HashSet::new();
                             while let Some((start, end)) =
-                                find.next(self.buffer.text(), offset, false, true)
+                                finder.next(self.buffer.text(), offset, false, true)
                             {
                                 if !selection
                                     .regions()
@@ -2982,31 +2984,31 @@ impl Document {
         Size::new(width, code_actions.len() as f64 * line_height)
     }
 
-    pub fn reset_find(&self, current_find: &Find) {
+    pub fn reset_find(&self, current_find: &Finder) {
         {
-            let find = self.find.borrow();
-            if find.search_string == current_find.search_string
-                && find.case_matching == current_find.case_matching
-                && find.regex.as_ref().map(|r| r.as_str())
+            let finder = self.finder.borrow();
+            if finder.search_string == current_find.search_string
+                && finder.case_matching == current_find.case_matching
+                && finder.regex.as_ref().map(|r| r.as_str())
                     == current_find.regex.as_ref().map(|r| r.as_str())
-                && find.whole_words == current_find.whole_words
+                && finder.whole_words == current_find.whole_words
             {
                 return;
             }
         }
 
-        let mut find = self.find.borrow_mut();
-        find.unset();
-        find.search_string = current_find.search_string.clone();
-        find.case_matching = current_find.case_matching;
-        find.regex = current_find.regex.clone();
-        find.whole_words = current_find.whole_words;
+        let mut finder = self.finder.borrow_mut();
+        finder.unset();
+        finder.search_string = current_find.search_string.clone();
+        finder.case_matching = current_find.case_matching;
+        finder.regex = current_find.regex.clone();
+        finder.whole_words = current_find.whole_words;
         *self.find_progress.borrow_mut() = FindProgress::Started;
     }
 
     pub fn update_find(
         &self,
-        current_find: &Find,
+        current_find: &Finder,
         start_line: usize,
         end_line: usize,
     ) {
@@ -3053,14 +3055,14 @@ impl Document {
             _ => None,
         };
 
-        let mut find = self.find.borrow_mut();
+        let mut finder = self.finder.borrow_mut();
 
         if let Some((search_range_start, search_range_end)) = search_range {
-            if !find.is_multiline_regex()
+            if !finder.is_multiline_regex()
                // only execute multi-line regex queries if we are searching the entire text (last step)
                || search_range_start == 0 && search_range_end == self.buffer.len()
             {
-                find.update_find(
+                finder.update_find(
                     self.buffer.text(),
                     search_range_start,
                     search_range_end,

@@ -1659,7 +1659,7 @@ impl LapceEditor {
         if data.editor.content.is_search() {
             return;
         }
-        if !data.find.visual {
+        if !data.finder.visual {
             return;
         }
 
@@ -1675,11 +1675,11 @@ impl LapceEditor {
 
         // Update the find with the whole document, so the count will be accurate in the widget
         data.doc
-            .update_find(&data.find, 0, data.doc.buffer().last_line());
-        if data.find.search_string.is_some() {
+            .update_find(&data.finder, 0, data.doc.buffer().last_line());
+        if data.finder.search_string.is_some() {
             for region in data
                 .doc
-                .find
+                .finder
                 .borrow()
                 .occurrences()
                 .regions_in_range(start, end)
