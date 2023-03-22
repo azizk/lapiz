@@ -69,7 +69,7 @@ impl Widget<LapceTabData> for Palette {
                 data.palette = palette_data.palette.clone();
                 data.workspace = palette_data.workspace.clone();
                 data.main_split = palette_data.main_split.clone();
-                data.find = palette_data.find.clone();
+                data.finder = palette_data.finder.clone();
             }
             Event::Command(cmd) if cmd.is(LAPCE_UI_COMMAND) => {
                 let command = cmd.get_unchecked(LAPCE_UI_COMMAND);

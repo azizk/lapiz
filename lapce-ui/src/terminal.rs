@@ -1263,7 +1263,7 @@ impl Widget<LapceTabData> for LapceTerminal {
         let mut term_data = LapceTerminalViewData {
             terminal: old_terminal_data.clone(),
             config: data.config.clone(),
-            find: data.find.clone(),
+            finder: data.finder.clone(),
         };
         ctx.set_cursor(&Cursor::IBeam);
         match event {
@@ -1557,8 +1557,8 @@ impl Widget<LapceTabData> for LapceTerminal {
                 );
             }
         }
-        if data.find.visual {
-            if let Some(search_string) = data.find.search_string.as_ref() {
+        if data.finder.visual {
+            if let Some(search_string) = data.finder.search_string.as_ref() {
                 if let Ok(dfas) = RegexSearch::new(&regex::escape(search_string)) {
                     let mut start = alacritty_terminal::index::Point::new(
                         alacritty_terminal::index::Line(

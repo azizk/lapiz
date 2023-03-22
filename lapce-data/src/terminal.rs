@@ -31,7 +31,7 @@ use crate::{
     config::{LapceConfig, LapceTheme},
     data::LapceWorkspace,
     document::SystemClipboard,
-    find::Find,
+    find::Finder,
     keypress::KeyPressFocus,
     proxy::LapceProxy,
     split::SplitMoveDirection,
@@ -273,7 +273,7 @@ impl TerminalSplitData {
 pub struct LapceTerminalViewData {
     pub terminal: Arc<LapceTerminalData>,
     pub config: Arc<LapceConfig>,
-    pub find: Arc<Find>,
+    pub finder: Arc<Finder>,
 }
 
 impl LapceTerminalViewData {
@@ -533,7 +533,7 @@ impl KeyPressFocus for LapceTerminalViewData {
                     ));
                 }
                 FocusCommand::SearchForward => {
-                    if let Some(search_string) = self.find.search_string.as_ref() {
+                    if let Some(search_string) = self.finder.search_string.as_ref() {
                         let mut raw = self.terminal.raw.lock();
                         let term = &mut raw.term;
                         self.terminal.search_next(
@@ -544,7 +544,7 @@ impl KeyPressFocus for LapceTerminalViewData {
                     }
                 }
                 FocusCommand::SearchBackward => {
-                    if let Some(search_string) = self.find.search_string.as_ref() {
+                    if let Some(search_string) = self.finder.search_string.as_ref() {
                         let mut raw = self.terminal.raw.lock();
                         let term = &mut raw.term;
                         self.terminal.search_next(

@@ -571,7 +571,7 @@ impl Widget<LapceTabData> for LapceEditorView {
                 Event::Command(cmd) if cmd.is(LAPCE_UI_COMMAND) => {}
                 Event::Command(cmd) if cmd.is(LAPCE_COMMAND) => {}
                 _ => {
-                    if event.should_propagate_to_hidden() || data.find.visual {
+                    if event.should_propagate_to_hidden() || data.finder.visual {
                         find.event(ctx, event, data, env);
                     }
                 }

@@ -811,16 +811,16 @@ impl LapceTab {
                     }
                     LapceUICommand::UpdateSearch(pattern, new_cs) => {
                         if pattern.is_empty() {
-                            Arc::make_mut(&mut data.find).unset();
+                            Arc::make_mut(&mut data.finder).unset();
                             Arc::make_mut(&mut data.search).matches =
                                 Arc::new(Default::default());
                         } else {
-                            let find = Arc::make_mut(&mut data.find);
+                            let finder = Arc::make_mut(&mut data.finder);
                             if let Some(cs) = new_cs {
-                                find.set_case_sensitive(*cs);
+                                finder.set_case_sensitive(*cs);
                             }
-                            find.set_find(pattern, false, false);
-                            find.visual = true;
+                            finder.set_find(pattern, false, false);
+                            finder.visual = true;
                             if data.focus_area == FocusArea::Panel(PanelKind::Search)
                                 && data.config.editor.move_focus_while_search
                             {
@@ -842,7 +842,7 @@ impl LapceTab {
                             let tab_id = data.id;
                             data.proxy.proxy_rpc.global_search(
                                 pattern.clone(),
-                                find.case_sensitive(),
+                                finder.case_sensitive(),
                                 Box::new(move |result| {
                                     if let Ok(
                                         ProxyResponse::GlobalSearchResponse {
