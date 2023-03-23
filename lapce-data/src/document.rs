@@ -432,7 +432,7 @@ pub struct Document {
     /// Information about specific ranges that are used to do smarter selections, supplied by an LSP
     pub syntax_selection_range: Option<SyntaxSelectionRanges>,
     /// Information about the selection find.
-    pub selection_find: Rc<RefCell<Finder>>,
+    pub selection_finder: Rc<RefCell<Finder>>,
     /// Information about the file-specific find box
     pub finder: Rc<RefCell<Finder>>,
     find_progress: Rc<RefCell<FindProgress>>,
@@ -463,8 +463,8 @@ impl Document {
             BufferContent::Scratch(id, _) => *id,
             _ => BufferId::next(),
         };
-        let mut selection_find = Finder::new(0);
-        selection_find.case_matching = CaseMatching::Exact;
+        let mut selection_finder = Finder::new(0);
+        selection_finder.case_matching = CaseMatching::Exact;
         Self {
             id,
             tab_id,
@@ -487,7 +487,7 @@ impl Document {
             completion_pos: (0, 0),
             ime_text: None,
             ime_pos: (0, 0, 0),
-            selection_find: Rc::new(RefCell::new(selection_find)),
+            selection_finder: Rc::new(RefCell::new(selection_finder)),
             finder: Rc::new(RefCell::new(Finder::new(0))),
             find_progress: Rc::new(RefCell::new(FindProgress::Ready)),
             event_sink,

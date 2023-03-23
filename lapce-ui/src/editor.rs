@@ -1541,10 +1541,10 @@ impl LapceEditor {
             None
         };
 
-        let mut selection_find = data.doc.selection_find.borrow_mut();
-        selection_find.unset();
+        let mut selection_finder = data.doc.selection_finder.borrow_mut();
+        selection_finder.unset();
         // Take the case_matching setting from the finder box.
-        selection_find.case_matching = data.doc.find.borrow().case_matching;
+        selection_finder.case_matching = data.doc.finder.borrow().case_matching;
 
         let selection = data.editor.cursor.as_selection(buffer);
 
@@ -1577,9 +1577,9 @@ impl LapceEditor {
         search_strings
             .iter()
             .for_each(|(search_string, match_whole_words)| {
-                selection_find.search_string = Some(search_string.to_string());
-                selection_find.whole_words = *match_whole_words;
-                selection_find.update_find(
+                selection_finder.search_string = Some(search_string.to_string());
+                selection_finder.whole_words = *match_whole_words;
+                selection_finder.update_find(
                     buffer.text(),
                     limited_search_range_start,
                     limited_search_range_end,
@@ -1587,7 +1587,7 @@ impl LapceEditor {
                 );
             });
 
-        selection_find
+        selection_finder
             .occurrences()
             .regions()
             .iter()
