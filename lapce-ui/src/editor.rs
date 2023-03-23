@@ -1569,15 +1569,15 @@ impl LapceEditor {
             .saturating_add(longest_search_string_length * 2)
             .max(buffer.max_len());
 
-        let mut selection_find = data.doc.selection_find.borrow_mut();
-        selection_find.unset();
+        let mut selection_finder = data.doc.selection_finder.borrow_mut();
+        selection_finder.unset();
         // Take the case_matching setting from the finder box.
-        selection_find.case_matching = data.doc.find.borrow().case_matching;
+        selection_finder.case_matching = data.doc.finder.borrow().case_matching;
 
         for (search_string, match_whole_words) in search_strings {
-            selection_find.search_string = Some(search_string.to_string());
-            selection_find.whole_words = match_whole_words;
-            selection_find.update_find(
+            selection_finder.search_string = Some(search_string.to_string());
+            selection_finder.whole_words = match_whole_words;
+            selection_finder.update_find(
                 buffer.text(),
                 limited_search_range_start,
                 limited_search_range_end,
@@ -1585,7 +1585,7 @@ impl LapceEditor {
             );
         }
 
-        for region in selection_find.occurrences().regions() {
+        for region in selection_finder.occurrences().regions() {
             let [start, end] = [region.min(), region.max()]
                 .map(|offset| buffer.offset_to_line_col(offset));
 
