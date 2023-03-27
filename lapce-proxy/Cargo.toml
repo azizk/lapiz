@@ -46,7 +46,7 @@ mio = "0.6.20"
 jsonrpc-lite = "0.6.0"
 
 # finding terminal shell
-which = "4.2.5"
+which = "4.4.0"
 
 # git
 git2 = { version = "0.16.1", features = ["vendored-openssl"] }
