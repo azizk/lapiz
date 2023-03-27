@@ -118,12 +118,10 @@ impl Finder {
     /// FLips the current case sensitivity and return the new sensitivity
     /// `true` for case_sensitive, `false` for case insensitive.
     pub fn toggle_case_sensitive(&mut self) -> bool {
-        let case_matching = match self.case_matching {
+        self.case_matching = match self.case_matching {
             CaseMatching::Exact => CaseMatching::CaseInsensitive,
             CaseMatching::CaseInsensitive => CaseMatching::Exact,
         };
-
-        self.case_matching = case_matching;
         self.case_sensitive()
     }
 
@@ -142,35 +140,20 @@ impl Finder {
 
     /// Sets find case sensitivity.
     pub fn set_case_sensitive(&mut self, case_sensitive: bool) {
-        let case_matching = if case_sensitive {
+        self.case_matching = if case_sensitive {
             CaseMatching::Exact
         } else {
             CaseMatching::CaseInsensitive
         };
-
-        self.case_matching = case_matching;
     }
 
-    /// Sets find parameters and search query. Returns `true` if parameters have been updated.
-    /// Returns `false` to indicate that parameters haven't change.
+    /// Sets find parameters and search query.
     pub fn set_find(
         &mut self,
         search_string: &str,
         is_regex: bool,
         whole_words: bool,
     ) {
-        if search_string.is_empty() {
-            self.unset();
-        }
-        if let Some(ref s) = self.search_string {
-            if s == search_string
-                && self.regex.is_some() == is_regex
-                && self.whole_words == whole_words
-            {
-                // search parameters did not change
-            }
-        }
-
         self.unset();
 
         self.search_string = Some(search_string.to_string());
@@ -195,9 +178,11 @@ impl Finder {
         wrap: bool,
     ) -> Option<(usize, usize)> {
         let search_string = self.search_string.as_ref()?;
+
         if !reverse {
             let mut raw_lines = text.lines_raw(offset..text.len());
             let mut find_cursor = Cursor::new(text, offset);
+
             while let Some(start) = find(
                 &mut find_cursor,
                 &mut raw_lines,
@@ -213,15 +198,18 @@ impl Finder {
                     raw_lines = text.lines_raw(find_cursor.pos()..text.len());
                     continue;
                 }
+
                 raw_lines = text.lines_raw(find_cursor.pos()..text.len());
 
                 if start > offset {
                     return Some((start, end));
                 }
             }
+
             if wrap {
                 let mut raw_lines = text.lines_raw(0..offset);
                 let mut find_cursor = Cursor::new(text, 0);
+
                 while let Some(start) = find(
                     &mut find_cursor,
                     &mut raw_lines,
@@ -237,6 +225,7 @@ impl Finder {
                         raw_lines = text.lines_raw(find_cursor.pos()..offset);
                         continue;
                     }
+
                     return Some((start, end));
                 }
             }
@@ -244,6 +233,7 @@ impl Finder {
             let mut raw_lines = text.lines_raw(0..offset);
             let mut find_cursor = Cursor::new(text, 0);
             let mut regions = Vec::new();
+
             while let Some(start) = find(
                 &mut find_cursor,
                 &mut raw_lines,
@@ -253,22 +243,27 @@ impl Finder {
             ) {
                 let end = find_cursor.pos();
                 raw_lines = text.lines_raw(find_cursor.pos()..offset);
+
                 if self.whole_words
                     && !self.is_matching_whole_words(text, start, end)
                 {
                     continue;
                 }
+
                 if start < offset {
                     regions.push((start, end));
                 }
             }
+
             if !regions.is_empty() {
                 return Some(regions[regions.len() - 1]);
             }
+
             if wrap {
                 let mut raw_lines = text.lines_raw(offset..text.len());
                 let mut find_cursor = Cursor::new(text, offset);
                 let mut regions = Vec::new();
+
                 while let Some(start) = find(
                     &mut find_cursor,
                     &mut raw_lines,
@@ -284,17 +279,20 @@ impl Finder {
                         raw_lines = text.lines_raw(find_cursor.pos()..text.len());
                         continue;
                     }
+
                     raw_lines = text.lines_raw(find_cursor.pos()..text.len());
 
                     if start > offset {
                         regions.push((start, end));
                     }
                 }
+
                 if !regions.is_empty() {
                     return Some(regions[regions.len() - 1]);
                 }
             }
         }
+
         None
     }
 
@@ -473,73 +471,48 @@ impl Finder {
             _ => (0, 0),
         };
 
-        if reverse {
-            let next_occurrence = match sel_start.checked_sub(1) {
+        let next_occurrence = if reverse {
+            match sel_start.checked_sub(1) {
                 Some(search_end) => {
                     self.occurrences.full_regions_in_range(0, search_end).last()
                 }
                 None => None,
-            };
-
-            if next_occurrence.is_none() && !wrapped {
-                // get previous unselected occurrence
-                return self
-                    .occurrences
-                    .regions_in_range(0, text.len())
-                    .iter()
-                    .cloned()
-                    .filter(|o| {
-                        sel.full_regions_in_range(o.min(), o.max()).is_empty()
-                    })
-                    .collect::<Vec<SelRegion>>()
-                    .last()
-                    .cloned();
             }
-
-            next_occurrence.cloned()
         } else {
-            let next_occurrence = self
-                .occurrences
+            self.occurrences
                 .full_regions_in_range(sel_end, text.len())
-                .first();
+                .first()
+        };
 
-            if next_occurrence.is_none() && !wrapped {
-                // get next unselected occurrence
-                return self
-                    .occurrences
-                    .full_regions_in_range(0, text.len())
-                    .iter()
-                    .cloned()
-                    .filter(|o| {
-                        sel.full_regions_in_range(o.min(), o.max()).is_empty()
-                    })
-                    .collect::<Vec<SelRegion>>()
-                    .first()
-                    .cloned();
+        if next_occurrence.is_none() && !wrapped {
+            let mut filtered = self
+                .occurrences
+                .full_regions_in_range(0, text.len())
+                .iter()
+                .filter(|occ| {
+                    sel.full_regions_in_range(occ.min(), occ.max()).is_empty()
+                });
+
+            // get previous or next unselected occurrence
+            if reverse {
+                filtered.last()
+            } else {
+                filtered.next()
             }
-
-            next_occurrence.cloned()
+        } else {
+            next_occurrence
         }
+        .cloned()
     }
 
-    /// Checks if the start and end of a match is matching whole words.
+    /// Checks if the start and end of a match is on word boundaries.
     fn is_matching_whole_words(
         &self,
         text: &Rope,
         start: usize,
         end: usize,
     ) -> bool {
-        let mut word_end_cursor = WordCursor::new(text, end - 1);
-        let mut word_start_cursor = WordCursor::new(text, start + 1);
-
-        if word_start_cursor.prev_code_boundary() != start {
-            return false;
-        }
-
-        if word_end_cursor.next_code_boundary() != end {
-            return false;
-        }
-
-        true
+        WordCursor::new(text, start + 1).prev_code_boundary() == start
+            && WordCursor::new(text, end - 1).next_code_boundary() == end
     }
 }
